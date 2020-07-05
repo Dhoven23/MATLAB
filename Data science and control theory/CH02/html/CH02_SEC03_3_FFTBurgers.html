@@ -1,0 +1,232 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>CH02_SEC03_3_FFTBurgers</title><meta name="generator" content="MATLAB 9.8"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-05-04"><meta name="DC.source" content="CH02_SEC03_3_FFTBurgers.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">FIGURES (PRODUCTION)</a></li></ul></div><pre class="codeinput">clear <span class="string">all</span>, close <span class="string">all</span>, clc
+nu=0.001;   <span class="comment">% Diffusion constant</span>
+
+<span class="comment">% Define spatial domain</span>
+L = 20;             <span class="comment">% Length of domain</span>
+N = 1000;           <span class="comment">% Number of discretization points</span>
+dx = L/N;
+x = -L/2:dx:L/2-dx; <span class="comment">% Define x domain</span>
+
+<span class="comment">% Define discrete wavenumbers</span>
+kappa = (2*pi/L)*[-N/2:N/2-1];
+kappa = fftshift(kappa');    <span class="comment">% Re-order fft wavenumbers</span>
+
+<span class="comment">% Initial condition</span>
+u0 = sech(x);
+
+<span class="comment">% Simulate PDE in spatial domain</span>
+dt = 0.025;
+t = 0:dt:100*dt;
+[t,u] = ode45(@(t,u)rhsBurgers(t,u,kappa,nu),t,u0);
+
+<span class="comment">% Plot solution in time</span>
+subplot(1,2,1)
+h=waterfall(real(u(1:10:end,:)));
+set(h,<span class="string">'LineWidth'</span>,2,<span class="string">'FaceAlpha'</span>,.5);
+colormap(jet/1.5)
+view(5,55)
+
+subplot(1,2,2)
+imagesc(flipud(real(u)));
+colormap <span class="string">jet</span>
+</pre><img vspace="5" hspace="5" src="CH02_SEC03_3_FFTBurgers_01.png" alt=""> <h2 id="2">FIGURES (PRODUCTION)</h2><pre class="codeinput">figure
+CC = colormap(jet(100));
+dt = 0.1;
+<span class="keyword">for</span> k = 1:100
+    <span class="keyword">if</span>(mod(k-1,10)==0)
+        plot(x,real(u(k,:)),<span class="string">'k'</span>,<span class="string">'LineWidth'</span>,1.5)
+<span class="comment">%         plot(x,real(u(k,:)),'Color',CC(k,:),'LineWidth',1.5)</span>
+        hold <span class="string">on</span>, grid <span class="string">on</span>, drawnow
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="comment">% xlabel('Spatial variable, x')</span>
+<span class="comment">% ylabel('Temperature, u(x,t)')</span>
+axis([-L/2 L/2 -.1 1.1])
+set(gca,<span class="string">'LineWidth'</span>,1.2,<span class="string">'FontSize'</span>,12);
+set(gcf,<span class="string">'Position'</span>,[100 100 550 220]);
+set(gcf,<span class="string">'PaperPositionMode'</span>,<span class="string">'auto'</span>)
+print(<span class="string">'-depsc2'</span>, <span class="string">'-loose'</span>, <span class="string">'../../figures/FFTBurgers1'</span>);
+
+<span class="comment">%</span>
+figure
+subplot(1,2,1)
+h=waterfall(real(u(1:10:end,:)));
+set(h,<span class="string">'LineWidth'</span>,2,<span class="string">'FaceAlpha'</span>,.5);
+colormap(jet/1.5)
+view(5,55)
+set(gca,<span class="string">'LineWidth'</span>,1.5)
+set(gca,<span class="string">'XTick'</span>,[0 500 1000],<span class="string">'XTickLabels'</span>,{})
+set(gca,<span class="string">'ZTick'</span>,[0 .5 1],<span class="string">'ZTickLabels'</span>,{})
+set(gca,<span class="string">'YTick'</span>,[0 5 10],<span class="string">'YTickLabels'</span>,{})
+set(gca,<span class="string">'YLim'</span>,[1 11])
+set(gca,<span class="string">'ZLim'</span>,[-.1 1.1])
+
+subplot(1,2,2)
+imagesc(flipud(real(u)));
+set(gca,<span class="string">'LineWidth'</span>,1.5)
+set(gca,<span class="string">'XTick'</span>,[0 500 1000],<span class="string">'XTickLabels'</span>,{})
+set(gca,<span class="string">'YTick'</span>,[0 50 100],<span class="string">'YTickLabels'</span>,{})
+
+colormap <span class="string">jet</span>
+set(gcf,<span class="string">'Position'</span>,[100 100 600 250])
+set(gcf,<span class="string">'PaperPositionMode'</span>,<span class="string">'auto'</span>)
+print(<span class="string">'-depsc2'</span>, <span class="string">'-loose'</span>, <span class="string">'../../figures/FFTBurgers2'</span>);
+</pre><pre class="codeoutput error">Error using matlab.graphics.internal.name (line 101)
+Cannot create output file '../../figures/FFTBurgers1.eps'.
+
+Error in print (line 71)
+pj = matlab.graphics.internal.name( pj );
+
+Error in print (line 210)
+            origPrint(args{:});
+
+Error in CH02_SEC03_3_FFTBurgers (line 50)
+print('-depsc2', '-loose', '../../figures/FFTBurgers1');
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2020a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clear all, close all, clc
+nu=0.001;   % Diffusion constant
+
+% Define spatial domain
+L = 20;             % Length of domain 
+N = 1000;           % Number of discretization points
+dx = L/N;
+x = -L/2:dx:L/2-dx; % Define x domain
+
+% Define discrete wavenumbers
+kappa = (2*pi/L)*[-N/2:N/2-1];
+kappa = fftshift(kappa');    % Re-order fft wavenumbers
+
+% Initial condition 
+u0 = sech(x);        
+
+% Simulate PDE in spatial domain
+dt = 0.025;
+t = 0:dt:100*dt;
+[t,u] = ode45(@(t,u)rhsBurgers(t,u,kappa,nu),t,u0);
+
+% Plot solution in time
+subplot(1,2,1)
+h=waterfall(real(u(1:10:end,:)));
+set(h,'LineWidth',2,'FaceAlpha',.5);
+colormap(jet/1.5)
+view(5,55)
+
+subplot(1,2,2)
+imagesc(flipud(real(u)));
+colormap jet
+
+%% FIGURES (PRODUCTION)
+figure
+CC = colormap(jet(100));
+dt = 0.1;
+for k = 1:100
+    if(mod(k-1,10)==0)
+        plot(x,real(u(k,:)),'k','LineWidth',1.5)
+%         plot(x,real(u(k,:)),'Color',CC(k,:),'LineWidth',1.5)
+        hold on, grid on, drawnow
+    end   
+end
+% xlabel('Spatial variable, x')
+% ylabel('Temperature, u(x,t)')
+axis([-L/2 L/2 -.1 1.1])
+set(gca,'LineWidth',1.2,'FontSize',12);
+set(gcf,'Position',[100 100 550 220]);
+set(gcf,'PaperPositionMode','auto')
+print('-depsc2', '-loose', '../../figures/FFTBurgers1');
+
+%
+figure
+subplot(1,2,1)
+h=waterfall(real(u(1:10:end,:)));
+set(h,'LineWidth',2,'FaceAlpha',.5);
+colormap(jet/1.5)
+view(5,55)
+set(gca,'LineWidth',1.5)
+set(gca,'XTick',[0 500 1000],'XTickLabels',{})
+set(gca,'ZTick',[0 .5 1],'ZTickLabels',{})
+set(gca,'YTick',[0 5 10],'YTickLabels',{})
+set(gca,'YLim',[1 11])
+set(gca,'ZLim',[-.1 1.1])
+
+subplot(1,2,2)
+imagesc(flipud(real(u)));
+set(gca,'LineWidth',1.5)
+set(gca,'XTick',[0 500 1000],'XTickLabels',{})
+set(gca,'YTick',[0 50 100],'YTickLabels',{})
+
+colormap jet
+set(gcf,'Position',[100 100 600 250])
+set(gcf,'PaperPositionMode','auto')
+print('-depsc2', '-loose', '../../figures/FFTBurgers2');
+##### SOURCE END #####
+--></body></html>

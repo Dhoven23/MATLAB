@@ -1,0 +1,7 @@
+#VRML V2.0 utf8
+
+Transform {
+  children Inline {
+    url "C:\\Users\\Tesla\\Downloads\\IAI_IXP3N3515GMWAPP310 (1)\\IXP-3N3515GM-WA-P-P3(10).wrl" 
+  }
+}

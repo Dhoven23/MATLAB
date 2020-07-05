@@ -1,0 +1,152 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Runge_kutta</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-07-11"><meta name="DC.source" content="Runge_kutta.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">clear <span class="string">all</span>
+
+<span class="comment">% Were going to ue R-K method to model approximate solutions to the first order DE dy/dt = cos(t-y)</span>
+<span class="comment">% initial Condition y(0) = 1.</span>
+
+ti = 0; <span class="comment">% initial point</span>
+tf = 100; <span class="comment">% final endpoint</span>
+h = 0.1; <span class="comment">% step size, t - t0</span>
+
+n = (tf - ti)/h; <span class="comment">% total # of steps</span>
+
+t(1) =ti; <span class="comment">% declare the starting t value in a for loop with t a running variable</span>
+
+y(1) = 1; <span class="comment">% initial condition y(0) = 1</span>
+
+<span class="keyword">for</span> j = 1:n
+    t(j+1) = h + t(j);
+    f(j) = cos(t(j)-y(j)); <span class="comment">% This states the differential at each iteration.</span>
+
+    <span class="comment">% Runge Kutta Chapter 8.3</span>
+    k1(j) = f(j);
+    k2(j) = cos(t(j)+h/2-y(j)-h*k1(j)/2);
+    k3(j) = cos(t(j)+h/2-y(j)+h*k2(j)/2);
+    k4(j) = cos(t(j)+h-y(j)-h*k3(j));
+
+    y(j+1) = y(j) + (h*k1(j)/6)+(h*k2(j)/3)+(h*k3(j)/3)+(h*k4(j)/6);
+
+<span class="keyword">end</span>
+
+figure(3)
+
+plot(t,y)
+xlabel(<span class="string">'t'</span>)
+ylabel(<span class="string">'y(t)'</span>)
+
+title(<span class="string">'Runge-Kutta'</span>)
+
+hold <span class="string">on</span>
+grid <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="Runge_kutta_01.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clear all
+
+% Were going to ue R-K method to model approximate solutions to the first order DE dy/dt = cos(t-y)
+% initial Condition y(0) = 1.
+
+ti = 0; % initial point
+tf = 100; % final endpoint
+h = 0.1; % step size, t - t0
+
+n = (tf - ti)/h; % total # of steps
+
+t(1) =ti; % declare the starting t value in a for loop with t a running variable
+
+y(1) = 1; % initial condition y(0) = 1
+
+for j = 1:n
+    t(j+1) = h + t(j);
+    f(j) = cos(t(j)-y(j)); % This states the differential at each iteration. 
+    
+    % Runge Kutta Chapter 8.3
+    k1(j) = f(j);
+    k2(j) = cos(t(j)+h/2-y(j)-h*k1(j)/2);
+    k3(j) = cos(t(j)+h/2-y(j)+h*k2(j)/2);
+    k4(j) = cos(t(j)+h-y(j)-h*k3(j));
+    
+    y(j+1) = y(j) + (h*k1(j)/6)+(h*k2(j)/3)+(h*k3(j)/3)+(h*k4(j)/6);
+    
+end
+
+figure(3)
+
+plot(t,y)
+xlabel('t')
+ylabel('y(t)')
+
+title('Runge-Kutta')
+
+hold on
+grid on
+
+
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,27 @@
+clear all, close all
+
+x = 0.1:.1:3;
+f = sin(x);
+
+
+
+plot(x,f,'k')
+hold on
+plot(x,f,'rx')
+
+dx = x(2) - x(1);
+n = length(f)
+f = r + randn
+dfdx = zeros(n,1);
+
+dfdx(1) = (f(2) - f(1))/dx;
+for i=2:n-1
+    dfdx(i) = (f(i+1)-f(i-1))/(2*dx)
+end
+dfdx(n) = (f(n) - f(n-1))/dx;
+
+figure
+plot(x,cos(x),'k')
+set(gcf,'Position',[1850 1200 800 600])
+hold on
+plot(x,dfdx,'rx')
